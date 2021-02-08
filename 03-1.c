@@ -14,6 +14,9 @@ int main()
     ppid = getppid();
     pid = getpid();
     printf("Child-process, pid = %d, ppid = %d\n", (int)pid, (int)ppid);
+    printf("Execution ls program.\n");
+    execl("/usr/bin/ls", "ls", NULL, NULL);
+    printf("\n");
   }
   else {
     pid = getpid();
