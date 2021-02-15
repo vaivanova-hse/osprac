@@ -5,12 +5,16 @@
 
 int main()
 {
-  int     fd[2], result;
-
+  int     fdP[2], result;
+  int     fdC[2];
   size_t size;
   char  resstring[14];
 
-  if (pipe(fd) < 0) {
+  if (pipe(fdP) < 0) {
+    printf("Can\'t open pipe\n");
+    exit(-1);
+  }
+  if (pipe(fdC) < 0) {
     printf("Can\'t open pipe\n");
     exit(-1);
   }
@@ -24,19 +28,29 @@ int main()
 
    /* Parent process */
 
-    if (close(fd[0]) < 0) {
-      printf("parent: Can\'t close reading side of pipe\n"); exit(-1);
+    if (close(fdP[0]) < 0) {
+      printf("parent: Can\'t close reading side of parent to child pipe\n");
+      exit(-1);
+    }
+    if (close(fdC[1]) < 0) {
+      printf("parent: Can\'t close writing side of child to parent pipe\n");
+      exit(-1);
     }
 
-    size = write(fd[1], "Hello, world!", 14);
+    size = write(fdP[1], "Hello, world!", 14);
 
     if (size != 14) {
       printf("Can\'t write all string to pipe\n");
       exit(-1);
     }
 
-    if (close(fd[1]) < 0) {
-      printf("parent: Can\'t close writing side of pipe\n"); exit(-1);
+    if (close(fdP[1]) < 0) {
+      printf("parent: Can\'t close writing side of parent to child pipe\n");
+      exit(-1);
+    }
+    if (close(fdC[0]) < 0) {
+      printf("parent: Can\'t close reading side of child to parent pipe\n");
+      exit(-1);
     }
 
     printf("Parent exit\n");
@@ -45,11 +59,16 @@ int main()
 
     /* Child process */
 
-    if (close(fd[1]) < 0) {
-      printf("child: Can\'t close writing side of pipe\n"); exit(-1);
+    if (close(fdP[1]) < 0) {
+      printf("child: Can\'t close writing side of parent to child pipe\n");
+      exit(-1);
+    }
+    if (close(fdC[0]) < 0) {
+      printf("child: Can\'t close reading side of child to parent pipe\n");
+      exit(-1);
     }
 
-    size = read(fd[0], resstring, 14);
+    size = read(fdP[0], resstring, 14);
 
     if (size < 0) {
       printf("Can\'t read string from pipe\n");
@@ -58,8 +77,13 @@ int main()
 
     printf("Child exit, resstring:%s\n", resstring);
 
-    if (close(fd[0]) < 0) {
-      printf("child: Can\'t close reading side of pipe\n"); exit(-1);
+    if (close(fdP[0]) < 0) {
+      printf("child: Can\'t close reading side of parent to child pipe\n");
+      exit(-1);
+    }
+    if (close(fdC[1]) < 0) {
+      printf("child: Can\'t close writing side of child to parent pipe\n");
+      exit(-1);
     }
   }
 
